@@ -1,12 +1,12 @@
 import pandas as pd
 import numpy as np
-from sklearn import preprocessing, svm
+from sklearn import preprocessing
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LinearRegression
 import matplotlib.pyplot as plt 
 
-FORCAST_DAYS = 1
-TEST_SIZE = 1
+FORCAST_DAYS = 5
+TEST_SIZE = 0.9
 
 df = pd.read_csv('./bitcoin_clean.csv')
 print(f'Initial length of the columns: {len(df)}.')
@@ -18,21 +18,33 @@ print(f'Initial length of the columns: {len(df)}.')
 df['Label'] = df['Close'].shift(-FORCAST_DAYS)
 df.dropna(inplace=True)
 
-plt.scatter(df['Normalized_Change'], df['Label'])
-plt.show()
+# We're creating a features array that doesn't include the time and 
+# label and then we're seperating it into the rows that we want to train 
+# and into the rows that we'll use for prediction.
 
-# FEATURES = preprocessing.scale(np.array(df.drop(['label'], axis=1)))
-# features = FEATURES[:-FORCAST_DAYS]
-# features_after = FEATURES[-FORCAST_DAYS:]
+FEATURES = preprocessing.scale(np.array(df.drop(['Label', 'Timestamp'], axis=1)))
+features = FEATURES[:-FORCAST_DAYS]
+features_after = FEATURES[-FORCAST_DAYS:]
 
-# label = np.array(df['label'])
-# label = label[:-FORCAST_DAYS]
+# Creating a label array for training without the days that will be predicted.
 
-# x_train, x_test, y_train, y_test = train_test_split(features, label, test_size=TEST_SIZE)
-# clf = LinearRegression(n_jobs=-1)
-# clf.fit(x_train, y_train)
-# accuracy = clf.score(x_test, y_test)
-# print(f'Accuracy: {accuracy}.')
+label = np.array(df['Label'])
+label = label[:-FORCAST_DAYS]
+print(len(label), len(features))
 
-# forcast_set = clf.predict(features_after)
-# print(forcast_set, accuracy, FORCAST_DAYS)
+# The previous data is being prepared for training and testing.
+
+x_train, x_test, y_train, y_test = train_test_split(features, label, test_size=TEST_SIZE)
+
+# Creating a linear regression classifier, training and testing it. 
+
+clf = LinearRegression(n_jobs=-1)
+clf.fit(x_train, y_train)
+accuracy = clf.score(x_test, y_test)
+print(f'Accuracy: {accuracy}.')
+
+# Using the classifier to predict the data and comparing it to the real data.
+
+forcast_set = clf.predict(features_after)
+print(forcast_set)
+print(df.tail(FORCAST_DAYS + 1))
