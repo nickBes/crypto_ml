@@ -55,10 +55,12 @@ si = 0
 for index, row in end.iterrows():
     if money > 0:
         if row['Close'] < forcast_set[si]:
+            print(f"Day {si + 1}, profit expected. Buying.")
             btc = money / row['Close']
             money = 0
     elif money == 0 and btc > 0:
         if row['Close'] < forcast_set[si]:
+            print(f"Day {si + 1}, profit expected. Selling.")
             money = btc * row['Close']
             btc = 0
     si += 1
@@ -70,4 +72,4 @@ for index, row in end.iterrows():
 
 if btc > 0:
     money = last * btc
-print(money)
+print("Money left: ", money)
