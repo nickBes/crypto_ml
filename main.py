@@ -50,6 +50,8 @@ end = df[-TEST_DAYS:]
 # if the person should buy or sell by the prediction.
 
 money = int(input('Money (in usd): '))
+pm = money
+print('')
 btc = 0
 si = 0
 for index, row in end.iterrows():
@@ -72,4 +74,4 @@ for index, row in end.iterrows():
 
 if btc > 0:
     money = last * btc
-print("Money left: ", money)
+print("\nProfit: ", money - pm)
