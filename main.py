@@ -5,11 +5,11 @@ from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LinearRegression
 import matplotlib.pyplot as plt 
 
-FORCAST_DAYS = 5
+FORCAST_DAYS = 1
 TEST_SIZE = 0.9
+TEST_DAYS = 5 * FORCAST_DAYS
 
 df = pd.read_csv('./bitcoin_clean.csv')
-print(f'Initial length of the columns: {len(df)}.')
 
 # Creating a label column for the prediction by moving the Close column 
 # backwards by the desired amount of forcast days. In this way the feature columns will
@@ -23,14 +23,13 @@ df.dropna(inplace=True)
 # and into the rows that we'll use for prediction.
 
 FEATURES = preprocessing.scale(np.array(df.drop(['Label', 'Timestamp'], axis=1)))
-features = FEATURES[:-FORCAST_DAYS]
-features_after = FEATURES[-FORCAST_DAYS:]
+features = FEATURES[:-TEST_DAYS]
+features_after = FEATURES[-TEST_DAYS:]
 
 # Creating a label array for training without the days that will be predicted.
 
 label = np.array(df['Label'])
-label = label[:-FORCAST_DAYS]
-print(len(label), len(features))
+label = label[:-TEST_DAYS]
 
 # The previous data is being prepared for training and testing.
 
@@ -44,7 +43,31 @@ accuracy = clf.score(x_test, y_test)
 print(f'Accuracy: {accuracy}.')
 
 # Using the classifier to predict the data and comparing it to the real data.
-
 forcast_set = clf.predict(features_after)
-print(forcast_set)
-print(df.tail(FORCAST_DAYS + 1))
+end = df[-TEST_DAYS:]
+
+# Getting from the user how much money he wants to trade, then we're checking for every day
+# if the person should buy or sell by the prediction.
+
+money = int(input('Money (in usd): '))
+btc = 0
+si = 0
+for index, row in end.iterrows():
+    if money > 0:
+        if row['Close'] < forcast_set[si]:
+            btc = money / row['Close']
+            money = 0
+    elif money == 0 and btc > 0:
+        if row['Close'] < forcast_set[si]:
+            money = btc * row['Close']
+            btc = 0
+    si += 1
+
+    if si == TEST_DAYS:
+        last = row['Label']
+
+# If there's some btc left sell on the next day and print the income
+
+if btc > 0:
+    money = last * btc
+print(money)
